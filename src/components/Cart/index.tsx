@@ -2,35 +2,42 @@
 
     import Delivery from '../Delivery'
     import Payment from '../Payment'
-    import * as S from './styles'
     import Confirmation from '../Confirmation'
-    
+    import { type Dish } from '../DishModal'
 
-    import pizzaImage from '../../assets/images/pizza-marguerita.png'
+    import * as S from './styles'
 
     type Props = {
     isOpen: boolean
-    cartCount: number
+    items: Dish[]
     onClose: () => void
-    onRemove: () => void
+    onRemove: (id: number) => void
     }
 
     const Cart = ({
     isOpen,
-    cartCount,
+    items,
     onClose,
     onRemove
     }: Props) => {
     const [step, setStep] = useState<
-    'cart' | 'delivery' | 'payment' | 'confirmation'
+        'cart' | 'delivery' | 'payment' | 'confirmation'
     >('cart')
-
 
     if (!isOpen) {
         return null
     }
 
-    const total = cartCount * 60.9
+    const total = items.reduce((accumulator, item) => {
+        return accumulator + item.preco
+    }, 0)
+
+    const formatPrice = (price: number) => {
+        return price.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+        })
+    }
 
     const goToDelivery = () => {
         setStep('delivery')
@@ -40,17 +47,18 @@
         setStep('cart')
     }
 
-        const goToPayment = () => {
+    const goToPayment = () => {
         setStep('payment')
-        }
-        const goBackToDelivery = () => {
-    setStep('delivery')
+    }
+
+    const goBackToDelivery = () => {
+        setStep('delivery')
     }
 
     const finishPayment = () => {
-    setStep('confirmation')
+        setStep('confirmation')
     }
-    
+
     const closeCart = () => {
         setStep('cart')
         onClose()
@@ -62,19 +70,22 @@
             {step === 'cart' && (
             <>
                 <S.Products>
-                {Array.from({ length: cartCount }).map((_, index) => (
-                    <S.Product key={index}>
+                {items.map((item, index) => (
+                    <S.Product key={`${item.id}-${index}`}>
                     <S.ProductImage
-                        src={pizzaImage}
-                        alt="Pizza Marguerita"
+                        src={item.foto}
+                        alt={item.nome}
                     />
 
                     <S.ProductInfo>
-                        <h3>Pizza Marguerita</h3>
-                        <span>R$ 60,90</span>
+                        <h3>{item.nome}</h3>
+                        <span>{formatPrice(item.preco)}</span>
                     </S.ProductInfo>
 
-                    <S.Remove type="button" onClick={onRemove}>
+                    <S.Remove
+                        type="button"
+                        onClick={() => onRemove(item.id)}
+                    >
                         ×
                     </S.Remove>
                     </S.Product>
@@ -83,17 +94,14 @@
 
                 <S.Total>
                 <span>Valor total</span>
-
-                <strong>
-                    {total.toLocaleString('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL'
-                    })}
-                </strong>
+                <strong>{formatPrice(total)}</strong>
                 </S.Total>
 
-                {cartCount > 0 && (
-                <S.Continue type="button" onClick={goToDelivery}>
+                {items.length > 0 && (
+                <S.Continue
+                    type="button"
+                    onClick={goToDelivery}
+                >
                     Continuar com a entrega
                 </S.Continue>
                 )}
@@ -106,6 +114,7 @@
                 onContinue={goToPayment}
             />
             )}
+
             {step === 'payment' && (
             <Payment
                 total={total}
@@ -113,10 +122,10 @@
                 onFinish={finishPayment}
             />
             )}
+
             {step === 'confirmation' && (
             <Confirmation onClose={closeCart} />
             )}
-
         </S.Sidebar>
         </S.Overlay>
     )

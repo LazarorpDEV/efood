@@ -1,6 +1,7 @@
     import * as S from './styles'
 
     type Props = {
+    id: number
     title: string
     description: string
     rating: number
@@ -9,6 +10,7 @@
     }
 
     const RestaurantCard = ({
+    id,
     title,
     description,
     rating,
@@ -38,7 +40,7 @@
 
             <S.Description>{description}</S.Description>
 
-            <S.Button to="/perfil">Saiba mais</S.Button>
+            <S.Button to={`/perfil/${id}`}>Saiba mais</S.Button>
         </S.Content>
         </S.Card>
     )

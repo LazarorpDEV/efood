@@ -1,20 +1,36 @@
     import * as S from './styles'
 
-    import pizzaImage from '../../assets/images/pizza-marguerita.png'
+    export type Dish = {
+    foto: string
+    preco: number
+    id: number
+    nome: string
+    descricao: string
+    porcao: string
+    }
 
     type Props = {
     isOpen: boolean
+    dish: Dish | null
     onClose: () => void
     onAddToCart: () => void
     }
 
     const DishModal = ({
     isOpen,
+    dish,
     onClose,
     onAddToCart
     }: Props) => {
-    if (!isOpen) {
+    if (!isOpen || !dish) {
         return null
+    }
+
+    const formatPrice = (price: number) => {
+        return price.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+        })
     }
 
     return (
@@ -24,21 +40,17 @@
             ×
             </S.Close>
 
-            <S.Image src={pizzaImage} alt="Pizza Marguerita" />
+            <S.Image src={dish.foto} alt={dish.nome} />
 
             <S.Content>
-            <h2>Pizza Marguerita</h2>
+            <h2>{dish.nome}</h2>
 
-            <p>
-                A clássica Marguerita: molho de tomate suculento, mussarela
-                derretida, manjericão fresco e um toque de azeite. Sabor e
-                simplicidade!
-            </p>
+            <p>{dish.descricao}</p>
 
-            <p>Serve: de 2 a 3 pessoas</p>
+            <p>Serve: {dish.porcao}</p>
 
             <S.AddButton type="button" onClick={onAddToCart}>
-                Adicionar ao carrinho - R$ 60,90
+                Adicionar ao carrinho - {formatPrice(dish.preco)}
             </S.AddButton>
             </S.Content>
         </S.Modal>

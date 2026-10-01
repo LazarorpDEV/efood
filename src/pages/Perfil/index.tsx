@@ -1,131 +1,158 @@
-    import { useState } from 'react'
+    import { useEffect, useState } from 'react'
+    import { useParams } from 'react-router-dom'
 
     import ProfileHeader from '../../components/ProfileHeader'
     import DishCard from '../../components/DishCard'
-    import DishModal from '../../components/DishModal'
+    import DishModal, { type Dish } from '../../components/DishModal'
     import Footer from '../../components/Footer'
     import Cart from '../../components/Cart'
 
-    import bannerImage from '../../assets/images/la-dolce-vita.png'
-    import pizzaImage from '../../assets/images/pizza-marguerita.png'
-
     import * as S from './styles'
 
-    const pizzaDescription =
-    'A clássica Marguerita: molho de tomate suculento, mussarela derretida, manjericão fresco e um toque de azeite. Sabor e simplicidade!'
+    type Restaurant = {
+    id: number
+    titulo: string
+    destacado: boolean
+    tipo: string
+    avaliacao: number
+    descricao: string
+    capa: string
+    cardapio: Dish[]
+    }
 
     const Perfil = () => {
+    const { id } = useParams()
+
+    const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
+    const [selectedDish, setSelectedDish] = useState<Dish | null>(null)
+
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [cartCount, setCartCount] = useState(0)
+    const [cartItems, setCartItems] = useState<Dish[]>([])
     const [isCartOpen, setIsCartOpen] = useState(false)
 
+    useEffect(() => {
+        fetch('https://api-ebac.vercel.app/api/efood/restaurantes')
+        .then((response) => {
+            if (!response.ok) {
+            throw new Error('Erro ao carregar o restaurante')
+            }
 
-    const openModal = () => {
+            return response.json()
+        })
+        .then((data: Restaurant[]) => {
+            const selectedRestaurant = data.find(
+            (item) => item.id === Number(id)
+            )
+
+            if (selectedRestaurant) {
+            setRestaurant(selectedRestaurant)
+            }
+        })
+        .catch((error) => {
+            console.error('Erro ao buscar restaurante:', error)
+        })
+    }, [id])
+
+    const openModal = (dish: Dish) => {
+        setSelectedDish(dish)
         setIsModalOpen(true)
     }
 
     const closeModal = () => {
         setIsModalOpen(false)
+        setSelectedDish(null)
     }
 
     const addToCart = () => {
-    setCartCount(cartCount + 1)
-    setIsModalOpen(false)
+        if (selectedDish) {
+        setCartItems((currentItems) => [
+            ...currentItems,
+            selectedDish
+        ])
+        }
+
+        setIsModalOpen(false)
+        setSelectedDish(null)
     }
 
-        const removeFromCart = () => {
-    setCartCount((currentCount) =>
-        Math.max(currentCount - 1, 0)
-    )
+    const removeFromCart = (id: number) => {
+        setCartItems((currentItems) => {
+        const itemIndex = currentItems.findIndex(
+            (item) => item.id === id
+        )
+
+        if (itemIndex === -1) {
+            return currentItems
+        }
+
+        return currentItems.filter(
+            (_, index) => index !== itemIndex
+        )
+        })
     }
 
-        const openCart = () => {
-    setIsCartOpen(true)
+    const openCart = () => {
+        setIsCartOpen(true)
     }
 
     const closeCart = () => {
-    setIsCartOpen(false)
+        setIsCartOpen(false)
+    }
+
+    if (!restaurant) {
+        return null
     }
 
     return (
         <>
         <ProfileHeader
-            cartCount={cartCount}
+            cartCount={cartItems.length}
             onCartClick={openCart}
-            />
+        />
 
         <S.Banner
             style={{
-            backgroundImage: `url(${bannerImage})`
+            backgroundImage: `url(${restaurant.capa})`
             }}
         >
             <S.BannerContent className="container">
-            <S.Category>Italiana</S.Category>
+            <S.Category>{restaurant.tipo}</S.Category>
 
             <S.RestaurantName>
-                La Dolce Vita Trattoria
+                {restaurant.titulo}
             </S.RestaurantName>
             </S.BannerContent>
         </S.Banner>
 
         <S.Dishes className="container">
             <S.DishList>
-            <DishCard
-                title="Pizza Marguerita"
-                description={pizzaDescription}
-                image={pizzaImage}
-                onClick={openModal}
-            />
-
-            <DishCard
-                title="Pizza Marguerita"
-                description={pizzaDescription}
-                image={pizzaImage}
-                onClick={openModal}
-            />
-
-            <DishCard
-                title="Pizza Marguerita"
-                description={pizzaDescription}
-                image={pizzaImage}
-                onClick={openModal}
-            />
-
-            <DishCard
-                title="Pizza Marguerita"
-                description={pizzaDescription}
-                image={pizzaImage}
-                onClick={openModal}
-            />
-
-            <DishCard
-                title="Pizza Marguerita"
-                description={pizzaDescription}
-                image={pizzaImage}
-                onClick={openModal}
-            />
-
-            <DishCard
-                title="Pizza Marguerita"
-                description={pizzaDescription}
-                image={pizzaImage}
-                onClick={openModal}
-            />
+            {restaurant.cardapio.map((dish) => (
+                <DishCard
+                key={dish.id}
+                title={dish.nome}
+                description={dish.descricao}
+                image={dish.foto}
+                onClick={() => openModal(dish)}
+                />
+            ))}
             </S.DishList>
         </S.Dishes>
 
         <Footer />
+
         <DishModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onAddToCart={addToCart}
+            isOpen={isModalOpen}
+            dish={selectedDish}
+            onClose={closeModal}
+            onAddToCart={addToCart}
         />
+
         <Cart
             isOpen={isCartOpen}
-            cartCount={cartCount}
+            items={cartItems}
             onClose={closeCart}
             onRemove={removeFromCart}
-            />
+        />
         </>
     )
     }
