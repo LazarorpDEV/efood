@@ -1,15 +1,28 @@
     import * as S from './styles'
 
+    import logo from '../../assets/images/logo.svg'
+    import instagram from '../../assets/images/instagram.svg'
+    import facebook from '../../assets/images/facebook.svg'
+    import twitter from '../../assets/images/twitter.svg'
+
     const Footer = () => {
     return (
         <S.Footer>
         <div className="container">
-            <S.Logo>efood 🍴</S.Logo>
+            <S.Logo src={logo} alt="efood" />
 
             <S.Social>
-            <span>●</span>
-            <span>●</span>
-            <span>●</span>
+            <a href="#" aria-label="Instagram">
+                <img src={instagram} alt="Instagram" />
+            </a>
+
+            <a href="#" aria-label="Facebook">
+                <img src={facebook} alt="Facebook" />
+            </a>
+
+            <a href="#" aria-label="Twitter">
+                <img src={twitter} alt="Twitter" />
+            </a>
             </S.Social>
 
             <S.Text>

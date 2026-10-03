@@ -1,10 +1,11 @@
     import * as S from './styles'
+    import logo from '../../assets/images/logo.svg'
 
     const Header = () => {
     return (
         <S.Header>
         <div className="container">
-            <S.Logo>efood 🍴</S.Logo>
+            <S.Logo src={logo} alt="efood" />
 
             <S.Title>
             Viva experiências gastronômicas

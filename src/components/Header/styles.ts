@@ -12,11 +12,11 @@
     }
     `
 
-    export const Logo = styled.div`
+    export const Logo = styled.img`
+    width: 125px;
+    height: auto;
     margin-top: 40px;
-    color: #e66767;
-    font-size: 32px;
-    font-weight: bold;
+    display: block;
     `
 
     export const Title = styled.h1`

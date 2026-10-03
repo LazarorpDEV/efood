@@ -1,6 +1,7 @@
     import { Link } from 'react-router-dom'
 
     import * as S from './styles'
+    import logo from '../../assets/images/logo.svg'
 
     type Props = {
     cartCount: number
@@ -19,7 +20,7 @@
             </S.RestaurantsLink>
 
             <S.Logo as={Link} to="/">
-            efood 🍴
+            <img src={logo} alt="efood" />
             </S.Logo>
 
             <S.Cart type="button" onClick={onCartClick}>

@@ -13,16 +13,30 @@
     }
     `
 
-    export const Logo = styled.div`
-    font-size: 26px;
-    font-weight: bold;
+    export const Logo = styled.img`
+    width: 125px;
+    height: auto;
+    display: block;
     `
 
     export const Social = styled.div`
     display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
     margin-top: 32px;
-    font-size: 12px;
+
+    a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    img {
+        width: 24px;
+        height: 24px;
+        display: block;
+    }
     `
 
     export const Text = styled.p`

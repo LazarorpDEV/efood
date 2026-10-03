@@ -19,8 +19,13 @@
     `
 
     export const Logo = styled.span`
-    font-size: 28px;
-    font-weight: 900;
+    display: block;
+
+    img {
+        width: 125px;
+        height: auto;
+        display: block;
+    }
     `
 
     export const Cart = styled.button`
