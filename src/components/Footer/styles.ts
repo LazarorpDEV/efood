@@ -41,7 +41,7 @@
 
     export const Text = styled.p`
     max-width: 480px;
-    margin-top: 80px;
+    margin-top: 32px;
     font-size: 10px;
     line-height: 12px;
     `
