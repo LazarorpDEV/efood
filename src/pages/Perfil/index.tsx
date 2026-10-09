@@ -1,11 +1,16 @@
+
     import { useEffect, useState } from 'react'
     import { useParams } from 'react-router-dom'
+    import { useDispatch, useSelector } from 'react-redux'
 
     import ProfileHeader from '../../components/ProfileHeader'
     import DishCard from '../../components/DishCard'
     import DishModal, { type Dish } from '../../components/DishModal'
     import Footer from '../../components/Footer'
     import Cart from '../../components/Cart'
+
+    import { adicionar, remover } from '../../store/reducers/carrinho'
+    import { type RootState } from '../../store'
 
     import * as S from './styles'
 
@@ -22,12 +27,15 @@
 
     const Perfil = () => {
     const { id } = useParams()
+    const dispatch = useDispatch()
+
+    const cartItems = useSelector(
+        (state: RootState) => state.carrinho.itens
+    )
 
     const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
     const [selectedDish, setSelectedDish] = useState<Dish | null>(null)
-
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [cartItems, setCartItems] = useState<Dish[]>([])
     const [isCartOpen, setIsCartOpen] = useState(false)
 
     useEffect(() => {
@@ -65,30 +73,14 @@
 
     const addToCart = () => {
         if (selectedDish) {
-        setCartItems((currentItems) => [
-            ...currentItems,
-            selectedDish
-        ])
+        dispatch(adicionar(selectedDish))
         }
 
-        setIsModalOpen(false)
-        setSelectedDish(null)
+        closeModal()
     }
 
-    const removeFromCart = (id: number) => {
-        setCartItems((currentItems) => {
-        const itemIndex = currentItems.findIndex(
-            (item) => item.id === id
-        )
-
-        if (itemIndex === -1) {
-            return currentItems
-        }
-
-        return currentItems.filter(
-            (_, index) => index !== itemIndex
-        )
-        })
+    const removeFromCart = (dishId: number) => {
+        dispatch(remover(dishId))
     }
 
     const openCart = () => {
@@ -117,7 +109,6 @@
         >
             <S.BannerContent className="container">
             <S.Category>{restaurant.tipo}</S.Category>
-
             <S.RestaurantName>
                 {restaurant.titulo}
             </S.RestaurantName>
