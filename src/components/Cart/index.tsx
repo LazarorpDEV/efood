@@ -1,7 +1,8 @@
+
     import { useState } from 'react'
 
-    import Delivery from '../Delivery'
-    import Payment from '../Payment'
+    import Delivery, { type DeliveryData } from '../Delivery'
+    import Payment, { type PaymentData } from '../Payment'
     import Confirmation from '../Confirmation'
     import { type Dish } from '../DishModal'
 
@@ -14,19 +15,21 @@
     onRemove: (id: number) => void
     }
 
-    const Cart = ({
-    isOpen,
-    items,
-    onClose,
-    onRemove
-    }: Props) => {
+    type CheckoutResponse = {
+    orderId: string
+    }
+
+    const Cart = ({ isOpen, items, onClose, onRemove }: Props) => {
     const [step, setStep] = useState<
         'cart' | 'delivery' | 'payment' | 'confirmation'
     >('cart')
 
-    if (!isOpen) {
-        return null
-    }
+    const [deliveryData, setDeliveryData] =
+        useState<DeliveryData | null>(null)
+
+    const [orderId, setOrderId] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState('')
 
     const total = items.reduce((accumulator, item) => {
         return accumulator + item.preco
@@ -39,43 +42,82 @@
         })
     }
 
-    const goToDelivery = () => {
-        setStep('delivery')
-    }
-
-    const goToCart = () => {
-        setStep('cart')
-    }
-
-    const goToPayment = () => {
+    const goToPayment = (data: DeliveryData) => {
+        setDeliveryData(data)
         setStep('payment')
     }
 
-    const goBackToDelivery = () => {
-        setStep('delivery')
-    }
+    const finishPayment = async (paymentData: PaymentData) => {
+        if (!deliveryData || isLoading || items.length === 0) {
+        return
+        }
 
-    const finishPayment = () => {
+        setIsLoading(true)
+        setError('')
+
+        try {
+        const response = await fetch(
+            'https://api-ebac.vercel.app/api/efood/checkout',
+            {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                products: items.map((item) => ({
+                id: item.id,
+                price: item.preco
+                })),
+                delivery: deliveryData,
+                payment: paymentData
+            })
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error('Não foi possível finalizar o pedido.')
+        }
+
+        const data: CheckoutResponse = await response.json()
+
+        if (!data.orderId) {
+            throw new Error('A API não retornou o número do pedido.')
+        }
+
+        setOrderId(String(data.orderId))
         setStep('confirmation')
+        } catch (err) {
+        setError(
+            err instanceof Error
+            ? err.message
+            : 'Ocorreu um erro ao finalizar o pedido.'
+        )
+        } finally {
+        setIsLoading(false)
+        }
     }
 
     const closeCart = () => {
         setStep('cart')
+        setDeliveryData(null)
+        setOrderId('')
+        setError('')
         onClose()
     }
 
+    if (!isOpen) {
+        return null
+    }
+
     return (
-        <S.Overlay onClick={closeCart}>
+        <S.Overlay onClick={isLoading ? undefined : closeCart}>
         <S.Sidebar onClick={(event) => event.stopPropagation()}>
             {step === 'cart' && (
             <>
                 <S.Products>
                 {items.map((item, index) => (
                     <S.Product key={`${item.id}-${index}`}>
-                    <S.ProductImage
-                        src={item.foto}
-                        alt={item.nome}
-                    />
+                    <S.ProductImage src={item.foto} alt={item.nome} />
 
                     <S.ProductInfo>
                         <h3>{item.nome}</h3>
@@ -100,7 +142,7 @@
                 {items.length > 0 && (
                 <S.Continue
                     type="button"
-                    onClick={goToDelivery}
+                    onClick={() => setStep('delivery')}
                 >
                     Continuar com a entrega
                 </S.Continue>
@@ -110,21 +152,30 @@
 
             {step === 'delivery' && (
             <Delivery
-                onBack={goToCart}
+                onBack={() => setStep('cart')}
                 onContinue={goToPayment}
             />
             )}
 
             {step === 'payment' && (
-            <Payment
+            <>
+                <Payment
                 total={total}
-                onBack={goBackToDelivery}
+                onBack={() => setStep('delivery')}
                 onFinish={finishPayment}
-            />
+                isLoading={isLoading}
+                />
+
+                {error && (
+                <p role="alert" style={{ color: '#fff', marginTop: 16 }}>
+                    {error}
+                </p>
+                )}
+            </>
             )}
 
             {step === 'confirmation' && (
-            <Confirmation onClose={closeCart} />
+            <Confirmation orderId={orderId} onClose={closeCart} />
             )}
         </S.Sidebar>
         </S.Overlay>

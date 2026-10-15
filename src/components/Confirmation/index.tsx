@@ -1,13 +1,17 @@
+
     import * as S from './styles'
 
     type Props = {
+    orderId: string
     onClose: () => void
     }
 
-    const Confirmation = ({ onClose }: Props) => {
+    const Confirmation = ({ orderId, onClose }: Props) => {
     return (
         <S.Container>
-        <S.Title>Pedido realizado - PEDIDO #123456</S.Title>
+        <S.Title>
+            Pedido realizado - PEDIDO {orderId}
+        </S.Title>
 
         <S.Text>
             Estamos felizes em informar que seu pedido já está em processo de
