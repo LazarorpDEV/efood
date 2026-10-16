@@ -18,6 +18,8 @@
     onContinue: (data: DeliveryData) => void
     }
 
+    const onlyNumbers = (value: string) => value.replace(/\D/g, '')
+
     const Delivery = ({ onBack, onContinue }: Props) => {
     const [receiver, setReceiver] = useState('')
     const [description, setDescription] = useState('')
@@ -29,14 +31,36 @@
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
 
+        const cleanZipCode = onlyNumbers(zipCode)
+        const addressNumber = Number(number)
+
+        if (
+        !receiver.trim() ||
+        !description.trim() ||
+        !city.trim()
+        ) {
+        alert('Preencha corretamente os dados de entrega.')
+        return
+        }
+
+        if (cleanZipCode.length !== 8) {
+        alert('O CEP deve conter exatamente 8 números.')
+        return
+        }
+
+        if (!Number.isSafeInteger(addressNumber) || addressNumber <= 0) {
+        alert('Informe um número de endereço válido.')
+        return
+        }
+
         onContinue({
-        receiver,
+        receiver: receiver.trim(),
         address: {
-            description,
-            city,
-            zipCode,
-            number: Number(number),
-            complement
+            description: description.trim(),
+            city: city.trim(),
+            zipCode: cleanZipCode,
+            number: addressNumber,
+            complement: complement.trim()
         }
         })
     }
@@ -54,6 +78,8 @@
                 value={receiver}
                 onChange={(event) => setReceiver(event.target.value)}
                 required
+                minLength={2}
+                maxLength={100}
             />
             </S.Field>
 
@@ -65,6 +91,8 @@
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 required
+                minLength={3}
+                maxLength={150}
             />
             </S.Field>
 
@@ -76,6 +104,8 @@
                 value={city}
                 onChange={(event) => setCity(event.target.value)}
                 required
+                minLength={2}
+                maxLength={100}
             />
             </S.Field>
 
@@ -85,8 +115,18 @@
                 <input
                 id="zipCode"
                 type="text"
+                inputMode="numeric"
+                autoComplete="postal-code"
+                placeholder="00000000"
+                maxLength={8}
+                pattern="[0-9]{8}"
+                title="Digite exatamente 8 números"
                 value={zipCode}
-                onChange={(event) => setZipCode(event.target.value)}
+                onChange={(event) =>
+                    setZipCode(
+                    onlyNumbers(event.target.value).slice(0, 8)
+                    )
+                }
                 required
                 />
             </S.Field>
@@ -95,22 +135,32 @@
                 <label htmlFor="number">Número</label>
                 <input
                 id="number"
-                type="number"
-                min="1"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]+"
+                title="Digite apenas números"
+                maxLength={10}
                 value={number}
-                onChange={(event) => setNumber(event.target.value)}
+                onChange={(event) =>
+                    setNumber(
+                    onlyNumbers(event.target.value).slice(0, 10)
+                    )
+                }
                 required
                 />
             </S.Field>
             </S.Row>
 
             <S.Field>
-            <label htmlFor="complement">Complemento (opcional)</label>
+            <label htmlFor="complement">
+                Complemento (opcional)
+            </label>
             <input
                 id="complement"
                 type="text"
                 value={complement}
                 onChange={(event) => setComplement(event.target.value)}
+                maxLength={100}
             />
             </S.Field>
 

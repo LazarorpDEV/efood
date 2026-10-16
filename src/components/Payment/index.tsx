@@ -21,6 +21,29 @@
     isLoading?: boolean
     }
 
+    const onlyNumbers = (value: string) => value.replace(/\D/g, '')
+
+    const isValidCardNumber = (number: string) => {
+    if (!/^\d{13,19}$/.test(number)) return false
+
+    let sum = 0
+    let doubleDigit = false
+
+    for (let i = number.length - 1; i >= 0; i--) {
+        let digit = Number(number[i])
+
+        if (doubleDigit) {
+        digit *= 2
+        if (digit > 9) digit -= 9
+        }
+
+        sum += digit
+        doubleDigit = !doubleDigit
+    }
+
+    return sum % 10 === 0
+    }
+
     const Payment = ({
     total,
     onBack,
@@ -41,23 +64,48 @@
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
 
+        const cleanCardNumber = onlyNumbers(cardNumber)
         const month = Number(expirationMonth)
         const year = Number(expirationYear)
+        const now = new Date()
 
-        if (month < 1 || month > 12) {
-        alert('Informe um mês de vencimento válido.')
+        if (cardName.trim().length < 3) {
+        alert('Informe o nome completo do titular do cartão.')
         return
         }
 
-        if (year < new Date().getFullYear()) {
-        alert('Informe um ano de vencimento válido.')
+        if (!isValidCardNumber(cleanCardNumber)) {
+        alert('Informe um número de cartão válido.')
+        return
+        }
+
+        if (!/^\d{3,4}$/.test(cvv)) {
+        alert('O CVV deve conter 3 ou 4 números.')
+        return
+        }
+
+        if (!/^\d{2}$/.test(expirationMonth) || month < 1 || month > 12) {
+        alert('Informe um mês válido entre 01 e 12.')
+        return
+        }
+
+        if (!/^\d{4}$/.test(expirationYear)) {
+        alert('Informe o ano de vencimento com 4 números.')
+        return
+        }
+
+        if (
+        year < now.getFullYear() ||
+        (year === now.getFullYear() && month < now.getMonth() + 1)
+        ) {
+        alert('O cartão está vencido.')
         return
         }
 
         onFinish({
         card: {
-            name: cardName,
-            number: cardNumber.replace(/\s/g, ''),
+            name: cardName.trim(),
+            number: cleanCardNumber,
             code: Number(cvv),
             expires: {
             month,
@@ -82,6 +130,8 @@
                 value={cardName}
                 onChange={(event) => setCardName(event.target.value)}
                 autoComplete="cc-name"
+                minLength={3}
+                maxLength={100}
                 required
             />
             </S.Field>
@@ -94,8 +144,17 @@
                 type="text"
                 inputMode="numeric"
                 autoComplete="cc-number"
+                placeholder="Somente números"
+                minLength={13}
+                maxLength={19}
+                pattern="[0-9]{13,19}"
+                title="Digite de 13 a 19 números"
                 value={cardNumber}
-                onChange={(event) => setCardNumber(event.target.value)}
+                onChange={(event) =>
+                    setCardNumber(
+                    onlyNumbers(event.target.value).slice(0, 19)
+                    )
+                }
                 required
                 />
             </S.Field>
@@ -106,10 +165,15 @@
                 id="cvv"
                 type="text"
                 inputMode="numeric"
-                maxLength={3}
                 autoComplete="cc-csc"
+                minLength={3}
+                maxLength={4}
+                pattern="[0-9]{3,4}"
+                title="Digite 3 ou 4 números"
                 value={cvv}
-                onChange={(event) => setCvv(event.target.value)}
+                onChange={(event) =>
+                    setCvv(onlyNumbers(event.target.value).slice(0, 4))
+                }
                 required
                 />
             </S.SmallField>
@@ -125,10 +189,14 @@
                 type="text"
                 inputMode="numeric"
                 maxLength={2}
+                pattern="[0-9]{2}"
+                placeholder="MM"
                 autoComplete="cc-exp-month"
                 value={expirationMonth}
                 onChange={(event) =>
-                    setExpirationMonth(event.target.value)
+                    setExpirationMonth(
+                    onlyNumbers(event.target.value).slice(0, 2)
+                    )
                 }
                 required
                 />
@@ -143,10 +211,14 @@
                 type="text"
                 inputMode="numeric"
                 maxLength={4}
+                pattern="[0-9]{4}"
+                placeholder="AAAA"
                 autoComplete="cc-exp-year"
                 value={expirationYear}
                 onChange={(event) =>
-                    setExpirationYear(event.target.value)
+                    setExpirationYear(
+                    onlyNumbers(event.target.value).slice(0, 4)
+                    )
                 }
                 required
                 />
